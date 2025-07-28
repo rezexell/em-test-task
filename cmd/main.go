@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rezexell/em-test-task/internal/config"
-	"log"
+	"github.com/rezexell/em-test-task/internal/handler"
+	"github.com/rezexell/em-test-task/internal/repository"
+	"github.com/rezexell/em-test-task/internal/service"
 	"os"
 )
 
@@ -15,18 +17,16 @@ func main() {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.DBUSER, cfg.DBPASSWORD, cfg.DBHOST, cfg.DBPORT, cfg.DBNAME)
 
-	conn, err := pgx.Connect(context.Background(), connStr)
+	dbpool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close(context.Background())
-
-	var greeting string
-	err = conn.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
 		os.Exit(1)
 	}
 
-	log.Println(greeting)
+	repos := repository.NewRepository(dbpool)
+	services := service.NewService(repos)
+	h := handler.NewHandler(services)
+
+	server := h.InitRouter()
+	server.Run(":3000")
 }
