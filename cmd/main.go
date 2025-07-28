@@ -1,32 +1,28 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rezexell/em-test-task/internal/config"
+	"github.com/rezexell/em-test-task/internal/database"
 	"github.com/rezexell/em-test-task/internal/handler"
 	"github.com/rezexell/em-test-task/internal/repository"
 	"github.com/rezexell/em-test-task/internal/service"
-	"os"
+	"log"
 )
 
 func main() {
 	cfg := config.InitConfig()
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		cfg.DBUSER, cfg.DBPASSWORD, cfg.DBHOST, cfg.DBPORT, cfg.DBNAME)
+	database.ApplyMigrations(cfg)
 
-	dbpool, err := pgxpool.New(context.Background(), connStr)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
-		os.Exit(1)
-	}
+	pool := database.InitDB(cfg)
+	defer pool.Close()
 
-	repos := repository.NewRepository(dbpool)
+	repos := repository.NewRepository(pool)
 	services := service.NewService(repos)
 	h := handler.NewHandler(services)
 
 	server := h.InitRouter()
-	server.Run(":3000")
+	if err := server.Run(":3000"); err != nil {
+		log.Fatal(err)
+	}
 }
