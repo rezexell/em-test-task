@@ -41,7 +41,9 @@ func ApplyMigrations(cfg *config.Config) {
 	if err != nil {
 		log.Fatalf("Failed to initialize migrate: %v", err)
 	}
-	defer m.Close()
+	defer func(m *migrate.Migrate) {
+		_, _ = m.Close()
+	}(m)
 
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		log.Fatalf("Failed to apply migrations: %v", err)
