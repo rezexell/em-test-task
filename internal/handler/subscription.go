@@ -8,33 +8,33 @@ import (
 )
 
 func (h *Handler) createSub(c *gin.Context) {
-	var sub model.Subscription
-	if err := c.ShouldBindJSON(&sub); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+	var req model.SubReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.service.CreateSubscription(c.Request.Context(), &sub); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create subscription"})
+	if err := h.service.CreateSubscription(c.Request.Context(), &req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, sub)
+	c.JSON(http.StatusCreated, gin.H{"message": "subscription created"})
 }
 
 func (h *Handler) updateSub(c *gin.Context) {
-	var sub model.Subscription
-	if err := c.ShouldBindJSON(&sub); err != nil {
+	var req model.SubReq
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	if err := h.service.UpdateSubscription(c.Request.Context(), &sub); err != nil {
+	if err := h.service.UpdateSubscription(c.Request.Context(), &req); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, sub)
+	c.JSON(http.StatusOK, gin.H{"message": "subscription updated"})
 }
 
 func (h *Handler) deleteSub(c *gin.Context) {
