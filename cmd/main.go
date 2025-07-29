@@ -14,8 +14,7 @@ func main() {
 
 	postgres.ApplyMigrations(cfg)
 
-	pool := postgres.InitDB(cfg)
-	defer pool.Close()
+	db := postgres.InitDB(cfg)
 
 	repos := repository.NewRepository(pool)
 	services := service.NewService(repos)

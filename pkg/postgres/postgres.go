@@ -4,33 +4,39 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rezexell/em-test-task/internal/config"
-	"log"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func getConnString(cfg *config.Config) string {
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.DBUSER, cfg.DBPASSWORD, cfg.DBHOST, cfg.DBPORT, cfg.DBNAME)
-	return connStr
 }
 
-func InitDB(cfg *config.Config) *pgxpool.Pool {
-	pool, err := pgxpool.New(context.Background(), getConnString(cfg))
+func InitDB(cfg *config.Config) *gorm.DB {
+	dsn := getConnString(cfg)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Unable to create connection pool: %v", err)
+		log.Fatalf("Unable to create GORM connection: %v", err)
 	}
 
-	// Проверяем соединение с БД
-	if err := pool.Ping(context.Background()); err != nil {
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("Failed to get underlying DB: %v", err)
+	}
+
+	if err := sqlDB.PingContext(context.Background()); err != nil {
 		log.Fatalf("Unable to ping database: %v", err)
 	}
 
 	log.Println("Database connection established")
-	return pool
+	return db
 }
 
 func ApplyMigrations(cfg *config.Config) {
