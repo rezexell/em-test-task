@@ -3,9 +3,8 @@ package repository
 import (
 	"context"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
-	//"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rezexell/em-test-task/internal/model"
 )
 
@@ -22,6 +21,6 @@ type Repository struct {
 	Subscription
 }
 
-func NewRepository(pool *pgxpool.Pool) *Repository {
-	return &Repository{Subscription: NewSubPostgres(pool)}
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{Subscription: NewSubPostgres(db)}
 }

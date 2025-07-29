@@ -86,3 +86,27 @@ func (h *Handler) getSubByID(c *gin.Context) {
 	c.JSON(http.StatusOK, sub)
 	return
 }
+
+func (h *Handler) getSubsByUser(c *gin.Context) {
+	userIDStr := c.Query("userid")
+	if userIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required query parameter: userid"})
+		return
+	}
+
+	// Валидируем UUID
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID format"})
+		return
+	}
+
+	subs, err := h.service.ListUserSubscriptions(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	if len(subs) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no subs found"})
+	}
+	c.JSON(http.StatusOK, subs)
+}

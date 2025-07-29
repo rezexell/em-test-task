@@ -16,7 +16,7 @@ func main() {
 
 	db := postgres.InitDB(cfg)
 
-	repos := repository.NewRepository(pool)
+	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
 	h := handler.NewHandler(services)
 
