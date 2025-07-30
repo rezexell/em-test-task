@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rezexell/em-test-task/internal/model"
 	"github.com/rezexell/em-test-task/internal/repository"
+	"time"
 )
 
 type Subscription interface {
@@ -14,6 +15,7 @@ type Subscription interface {
 	DeleteSubscription(ctx context.Context, id uuid.UUID) error
 	ListUserSubscriptions(ctx context.Context, userID uuid.UUID) ([]*model.Subscription, error)
 	ListAllSubscriptions(ctx context.Context) ([]*model.Subscription, error)
+	TotalSubscriptionCost(ctx context.Context, userID *uuid.UUID, serviceName *string, periodStart, periodEnd time.Time) (int, error)
 }
 type Service struct {
 	Subscription

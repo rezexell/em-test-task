@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rezexell/em-test-task/internal/model"
@@ -39,7 +40,7 @@ func (r *SubPostgres) GetByID(ctx context.Context, id uuid.UUID) (*model.Subscri
 func (r *SubPostgres) Update(ctx context.Context, sub *model.Subscription) error {
 	result := r.db.WithContext(ctx).Model(&model.Subscription{}).
 		Where("id = ?", sub.ID).
-		Updates(sub) // Используем саму структуру вместо map
+		Updates(sub)
 
 	if result.Error != nil {
 		return result.Error
@@ -84,5 +85,29 @@ func (r *SubPostgres) ListAll(ctx context.Context) ([]*model.Subscription, error
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	return subscriptions, nil
+}
+
+func (r *SubPostgres) ListWithFilters(ctx context.Context, userID *uuid.UUID, serviceName *string, startPeriod, endPeriod time.Time) ([]*model.Subscription, error) {
+	var subscriptions []*model.Subscription
+
+	query := r.db.WithContext(ctx)
+
+	if userID != nil {
+		query = query.Where("user_id = ?", *userID)
+	}
+
+	if serviceName != nil {
+		query = query.Where("service_name = ?", *serviceName)
+	}
+
+	query = query.Where("start_date <= ?", endPeriod).
+		Where("(end_date IS NOT NULL AND end_date >= ?) OR (end_date IS NULL)", startPeriod)
+
+	result := query.Order("start_date DESC").Find(&subscriptions)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
 	return subscriptions, nil
 }

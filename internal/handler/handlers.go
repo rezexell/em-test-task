@@ -21,9 +21,10 @@ func (h *Handler) InitRouter() *gin.Engine {
 		sub.POST("/", h.createSub)
 		sub.PUT("/", h.updateSub)
 		sub.DELETE("/:id", h.deleteSub)
-		sub.GET("/all", h.getAllSubs) // Изменен путь
+		sub.GET("/", h.getAllSubs) // Изменен путь
 		sub.GET("/:id", h.getSubByID)
 		sub.GET("/by-user", h.getSubsByUser)
+		sub.GET("/total-cost", h.getTotalCost)
 	}
 	return router
 }

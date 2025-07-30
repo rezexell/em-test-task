@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"time"
 
 	"github.com/rezexell/em-test-task/internal/model"
 )
@@ -15,6 +16,7 @@ type Subscription interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]*model.Subscription, error)
 	ListAll(ctx context.Context) ([]*model.Subscription, error)
+	ListWithFilters(ctx context.Context, userID *uuid.UUID, serviceName *string, startPeriod, endPeriod time.Time) ([]*model.Subscription, error)
 }
 
 type Repository struct {

@@ -65,6 +65,73 @@ func (s *SubService) ListAllSubscriptions(ctx context.Context) ([]*model.Subscri
 	return s.repo.ListAll(ctx)
 }
 
+func (s *SubService) TotalSubscriptionCost(ctx context.Context, userID *uuid.UUID, serviceName *string, periodStart, periodEnd time.Time) (int, error) {
+	if periodStart.After(periodEnd) {
+		return 0, errors.New("start period cannot be after end period")
+	}
+
+	subscriptions, err := s.repo.ListWithFilters(
+		ctx,
+		userID,
+		serviceName,
+		periodStart,
+		periodEnd,
+	)
+
+	if err != nil {
+		return 0, err
+	}
+
+	total := 0
+	for _, sub := range subscriptions {
+		activeMonths := calculateActiveMonths(
+			sub.StartDate,
+			sub.EndDate,
+			periodStart,
+			periodEnd,
+		)
+
+		total += sub.MonthlyCost * activeMonths
+	}
+
+	return total, nil
+}
+
+func calculateActiveMonths(subStart time.Time, subEnd *time.Time, periodStart, periodEnd time.Time) int {
+	activityStart := subStart
+	if subStart.Before(periodStart) {
+		activityStart = periodStart
+	}
+
+	var activityEnd time.Time
+	if subEnd == nil {
+		activityEnd = periodEnd
+	} else {
+		activityEnd = *subEnd
+		if activityEnd.After(periodEnd) {
+			activityEnd = periodEnd
+		}
+	}
+
+	if activityStart.After(activityEnd) {
+		return 0
+	}
+
+	return countFullMonthsBetween(activityStart, activityEnd)
+}
+
+func countFullMonthsBetween(start, end time.Time) int {
+	start = time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.UTC)
+	end = time.Date(end.Year(), end.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	months := 0
+	for current := start; !current.After(end); current = current.AddDate(0, 1, 0) {
+		months++
+	}
+
+	return months
+}
+
 func reqToModel(req *model.SubReq) (*model.Subscription, error) {
 	var sub *model.Subscription
 	var ed *time.Time
@@ -76,7 +143,6 @@ func reqToModel(req *model.SubReq) (*model.Subscription, error) {
 		parsedEd, _ := time.Parse("01/2006", req.EndDate)
 		ed = &parsedEd
 
-		// Проверяем что end date после start date
 		if ed.Before(sd) {
 			return nil, errors.New("end date cannot be before start date")
 		}

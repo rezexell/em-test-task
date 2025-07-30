@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rezexell/em-test-task/internal/model"
 	"net/http"
+	"time"
 )
 
 func (h *Handler) createSub(c *gin.Context) {
@@ -94,7 +95,6 @@ func (h *Handler) getSubsByUser(c *gin.Context) {
 		return
 	}
 
-	// Валидируем UUID
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID format"})
@@ -109,4 +109,61 @@ func (h *Handler) getSubsByUser(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "no subs found"})
 	}
 	c.JSON(http.StatusOK, subs)
+}
+
+func (h *Handler) getTotalCost(c *gin.Context) {
+	userIDStr := c.Query("user_id")
+	serviceName := c.Query("service_name")
+	startPeriodStr := c.Query("start_period")
+	endPeriodStr := c.Query("end_period")
+
+	if startPeriodStr == "" || endPeriodStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_period and end_period are required"})
+		return
+	}
+
+	startPeriod, err := time.Parse("01/2006", startPeriodStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start_period format, use MM/YYYY"})
+		return
+	}
+
+	endPeriod, err := time.Parse("01/2006", endPeriodStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end_period format, use MM/YYYY"})
+		return
+	}
+
+	startPeriod = time.Date(startPeriod.Year(), startPeriod.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endPeriod = time.Date(endPeriod.Year(), endPeriod.Month()+1, 0, 0, 0, 0, 0, time.UTC)
+
+	var userIDPtr *uuid.UUID
+	if userIDStr != "" {
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id format"})
+			return
+		}
+		userIDPtr = &userID
+	}
+
+	var serviceNamePtr *string
+	if serviceName != "" {
+		serviceNamePtr = &serviceName
+	}
+
+	total, err := h.service.TotalSubscriptionCost(
+		c.Request.Context(),
+		userIDPtr,
+		serviceNamePtr,
+		startPeriod,
+		endPeriod,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"total_cost": total})
 }
