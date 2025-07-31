@@ -25,15 +25,18 @@ func InitDB(cfg *config.Config, logger *slog.Logger) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		logger.Error("Unable to create GORM connection", slog.Any("err", err.Error()))
+		os.Exit(1)
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
 		logger.Error("Failed to get underlying DB:", slog.Any("err", err.Error()))
+		os.Exit(1)
 	}
 
 	if err := sqlDB.PingContext(context.Background()); err != nil {
 		logger.Error("Unable to ping database:", slog.Any("err", err.Error()))
+		os.Exit(1)
 	}
 
 	logger.Info("Database connection successfully established")

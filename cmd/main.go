@@ -12,7 +12,7 @@ import (
 
 func main() {
 	cfg := config.InitConfig()
-	logger := slogger.InitLogger()
+	logger := slogger.InitLogger(cfg)
 	logger.Info("Logger initialized")
 
 	postgres.ApplyMigrations(cfg, logger)

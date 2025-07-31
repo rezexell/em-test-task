@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	LOGLEVEL   string
 	DBHOST     string
 	DBPORT     string
 	DBUSER     string
@@ -26,5 +27,6 @@ func InitConfig() *Config {
 		DBUSER:     os.Getenv("DB_USER"),
 		DBPASSWORD: os.Getenv("DB_PASSWORD"),
 		DBNAME:     os.Getenv("DB_NAME"),
+		LOGLEVEL:   os.Getenv("LOG_LEVEL"),
 	}
 }

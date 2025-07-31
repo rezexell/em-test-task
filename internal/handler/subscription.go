@@ -4,11 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/rezexell/em-test-task/internal/model"
+	"log/slog"
 	"net/http"
 	"time"
 )
 
 func (h *Handler) CreateSub(c *gin.Context) {
+	const fn = "handler.CreateSub"
+	h.logger.Info("context", slog.String("fn", fn))
+
 	var req model.SubReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -24,6 +28,9 @@ func (h *Handler) CreateSub(c *gin.Context) {
 }
 
 func (h *Handler) UpdateSub(c *gin.Context) {
+	const fn = "handler.UpdateSub"
+	h.logger.Info("context", slog.String("fn", fn))
+
 	var req model.SubReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -39,6 +46,9 @@ func (h *Handler) UpdateSub(c *gin.Context) {
 }
 
 func (h *Handler) DeleteSub(c *gin.Context) {
+	const fn = "handler.DeleteSub"
+	h.logger.Info("context", slog.String("fn", fn))
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -53,6 +63,8 @@ func (h *Handler) DeleteSub(c *gin.Context) {
 }
 
 func (h *Handler) GetAllSubs(c *gin.Context) {
+	const fn = "handler.GetAllSubs"
+	h.logger.Info("context", slog.String("fn", fn))
 
 	subs, err := h.service.ListAllSubscriptions(c.Request.Context())
 	if err != nil {
@@ -67,7 +79,9 @@ func (h *Handler) GetAllSubs(c *gin.Context) {
 }
 
 func (h *Handler) GetSubByID(c *gin.Context) {
-	//test
+	const fn = "handler.GetSubByID"
+	h.logger.Info("context", slog.String("fn", fn))
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -89,6 +103,9 @@ func (h *Handler) GetSubByID(c *gin.Context) {
 }
 
 func (h *Handler) GetFilteredSubs(c *gin.Context) {
+	const fn = "handler.GetFilteredSubs"
+	h.logger.Info("context", slog.String("fn", fn))
+
 	userIDStr := c.Query("user_id")
 	serviceName := c.Query("service_name")
 
@@ -126,6 +143,9 @@ func (h *Handler) GetFilteredSubs(c *gin.Context) {
 }
 
 func (h *Handler) GetTotalCost(c *gin.Context) {
+	const fn = "handler.GetTotalCost"
+	h.logger.Info("context", slog.String("fn", fn))
+
 	userIDStr := c.Query("user_id")
 	serviceName := c.Query("service_name")
 	startPeriodStr := c.Query("start_period")
