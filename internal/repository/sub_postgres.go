@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -89,7 +88,6 @@ func (r *SubPostgres) ListWithFilters(ctx context.Context, userID *uuid.UUID, se
 		query = query.Where("service_name = ?", *serviceName)
 	}
 
-	log.Println(startPeriod, "||||", endPeriod)
 	if startPeriod != nil && endPeriod != nil {
 		query = query.Where("start_date <= ?", endPeriod).
 			Where("(end_date IS NOT NULL AND end_date >= ?) OR (end_date IS NULL)", startPeriod)
@@ -99,7 +97,6 @@ func (r *SubPostgres) ListWithFilters(ctx context.Context, userID *uuid.UUID, se
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	log.Println(*subscriptions[0])
 
 	return subscriptions, nil
 }

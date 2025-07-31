@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -19,46 +20,48 @@ func getConnString(cfg *config.Config) string {
 		cfg.DBUSER, cfg.DBPASSWORD, cfg.DBHOST, cfg.DBPORT, cfg.DBNAME)
 }
 
-func InitDB(cfg *config.Config) *gorm.DB {
+func InitDB(cfg *config.Config, logger *slog.Logger) *gorm.DB {
 	dsn := getConnString(cfg)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Unable to create GORM connection: %v", err)
+		logger.Error("Unable to create GORM connection", slog.Any("err", err.Error()))
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatalf("Failed to get underlying DB: %v", err)
+		logger.Error("Failed to get underlying DB:", slog.Any("err", err.Error()))
 	}
 
 	if err := sqlDB.PingContext(context.Background()); err != nil {
-		log.Fatalf("Unable to ping database: %v", err)
+		logger.Error("Unable to ping database:", slog.Any("err", err.Error()))
 	}
 
-	log.Println("Database connection established")
+	logger.Info("Database connection successfully established")
 	return db
 }
 
-func ApplyMigrations(cfg *config.Config) {
+func ApplyMigrations(cfg *config.Config, logger *slog.Logger) {
 
 	m, err := migrate.New(
 		"file:///app/migrations",
 		getConnString(cfg))
 	if err != nil {
-		log.Fatalf("Failed to initialize migrate: %v", err)
+		logger.Error("Failed to initialize migrate:", slog.Any("err", err.Error()))
+		os.Exit(1)
 	}
 	defer func(m *migrate.Migrate) {
 		_, _ = m.Close()
 	}(m)
 
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatalf("Failed to apply migrations: %v", err)
+		logger.Error("Failed to apply migrations:", slog.Any("err", err.Error()))
+		os.Exit(1)
 	}
 
 	version, dirty, err := m.Version()
 	if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
-		log.Printf("Failed to get migration version: %v", err)
+		logger.Warn("Failed to get migration version", slog.Any("err", err.Error()))
 	} else {
-		log.Printf("Database migrations applied. Version: %d, Dirty: %v", version, dirty)
+		logger.Info("Database migrations applied", slog.Int("version", int(version)), slog.Bool("dirty", dirty))
 	}
 }

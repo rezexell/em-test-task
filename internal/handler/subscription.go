@@ -53,6 +53,7 @@ func (h *Handler) DeleteSub(c *gin.Context) {
 }
 
 func (h *Handler) GetAllSubs(c *gin.Context) {
+
 	subs, err := h.service.ListAllSubscriptions(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -6,22 +6,26 @@ import (
 	"github.com/rezexell/em-test-task/internal/repository"
 	"github.com/rezexell/em-test-task/internal/service"
 	"github.com/rezexell/em-test-task/pkg/postgres"
-	"log"
+	"github.com/rezexell/em-test-task/pkg/slogger"
+	"os"
 )
 
 func main() {
 	cfg := config.InitConfig()
+	logger := slogger.InitLogger()
+	logger.Info("Logger initialized")
 
-	postgres.ApplyMigrations(cfg)
+	postgres.ApplyMigrations(cfg, logger)
 
-	db := postgres.InitDB(cfg)
+	db := postgres.InitDB(cfg, logger)
 
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
-	h := handler.NewHandler(services)
+	h := handler.NewHandler(services, logger)
 
 	server := h.InitRouter()
 	if err := server.Run(":3000"); err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 }
