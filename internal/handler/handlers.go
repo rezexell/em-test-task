@@ -18,13 +18,13 @@ func (h *Handler) InitRouter() *gin.Engine {
 
 	sub := router.Group("/sub")
 	{
-		sub.POST("/", h.createSub)
-		sub.PUT("/", h.updateSub)
-		sub.DELETE("/:id", h.deleteSub)
-		sub.GET("/", h.getAllSubs) // Изменен путь
-		sub.GET("/:id", h.getSubByID)
-		sub.GET("/by-user", h.getSubsByUser)
-		sub.GET("/total-cost", h.getTotalCost)
+		sub.POST("/", h.CreateSub)
+		sub.PUT("/", h.UpdateSub)
+		sub.DELETE("/:id", h.DeleteSub)
+		sub.GET("/", h.GetAllSubs)
+		sub.GET("/:id", h.GetSubByID)
+		sub.GET("/filter/", h.GetFilteredSubs)
+		sub.GET("/total-cost/", h.GetTotalCost)
 	}
 	return router
 }

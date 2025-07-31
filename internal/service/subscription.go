@@ -53,16 +53,13 @@ func (s *SubService) DeleteSubscription(ctx context.Context, id uuid.UUID) error
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *SubService) ListUserSubscriptions(ctx context.Context, userID uuid.UUID) ([]*model.Subscription, error) {
-	if userID == uuid.Nil {
-		return nil, errors.New("invalid user ID")
-	}
-
-	return s.repo.ListByUser(ctx, userID)
-}
-
 func (s *SubService) ListAllSubscriptions(ctx context.Context) ([]*model.Subscription, error) {
 	return s.repo.ListAll(ctx)
+}
+
+func (s *SubService) ListSubscriptionsWithFilters(ctx context.Context, userID *uuid.UUID, serviceName *string) ([]*model.Subscription, error) {
+	return s.repo.ListWithFilters(ctx, userID, serviceName, nil, nil)
+	//TODO: Сделать фильтр по дате
 }
 
 func (s *SubService) TotalSubscriptionCost(ctx context.Context, userID *uuid.UUID, serviceName *string, periodStart, periodEnd time.Time) (int, error) {
@@ -74,8 +71,8 @@ func (s *SubService) TotalSubscriptionCost(ctx context.Context, userID *uuid.UUI
 		ctx,
 		userID,
 		serviceName,
-		periodStart,
-		periodEnd,
+		&periodStart,
+		&periodEnd,
 	)
 
 	if err != nil {

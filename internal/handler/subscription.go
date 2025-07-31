@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (h *Handler) createSub(c *gin.Context) {
+func (h *Handler) CreateSub(c *gin.Context) {
 	var req model.SubReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -23,7 +23,7 @@ func (h *Handler) createSub(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "subscription created"})
 }
 
-func (h *Handler) updateSub(c *gin.Context) {
+func (h *Handler) UpdateSub(c *gin.Context) {
 	var req model.SubReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -38,7 +38,7 @@ func (h *Handler) updateSub(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "subscription updated"})
 }
 
-func (h *Handler) deleteSub(c *gin.Context) {
+func (h *Handler) DeleteSub(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -52,21 +52,20 @@ func (h *Handler) deleteSub(c *gin.Context) {
 	return
 }
 
-func (h *Handler) getAllSubs(c *gin.Context) {
+func (h *Handler) GetAllSubs(c *gin.Context) {
 	subs, err := h.service.ListAllSubscriptions(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	if len(subs) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "no subs found"})
-		return
+	if len(subs) == 0 || subs == nil {
+		subs = []*model.Subscription{}
 	}
 	c.JSON(http.StatusOK, subs)
 	return
 }
 
-func (h *Handler) getSubByID(c *gin.Context) {
+func (h *Handler) GetSubByID(c *gin.Context) {
 	//test
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -88,30 +87,44 @@ func (h *Handler) getSubByID(c *gin.Context) {
 	return
 }
 
-func (h *Handler) getSubsByUser(c *gin.Context) {
-	userIDStr := c.Query("userid")
-	if userIDStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required query parameter: userid"})
-		return
+func (h *Handler) GetFilteredSubs(c *gin.Context) {
+	userIDStr := c.Query("user_id")
+	serviceName := c.Query("service_name")
+
+	var userIDPtr *uuid.UUID
+	if userIDStr != "" {
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id format"})
+			return
+		}
+		userIDPtr = &userID
 	}
 
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID format"})
-		return
+	var serviceNamePtr *string
+	if serviceName != "" {
+		serviceNamePtr = &serviceName
 	}
 
-	subs, err := h.service.ListUserSubscriptions(c.Request.Context(), userID)
+	subs, err := h.service.ListSubscriptionsWithFilters(
+		c.Request.Context(),
+		userIDPtr,
+		serviceNamePtr,
+	)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-	if len(subs) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "no subs found"})
+
+	if subs == nil {
+		subs = []*model.Subscription{}
 	}
+
 	c.JSON(http.StatusOK, subs)
 }
 
-func (h *Handler) getTotalCost(c *gin.Context) {
+func (h *Handler) GetTotalCost(c *gin.Context) {
 	userIDStr := c.Query("user_id")
 	serviceName := c.Query("service_name")
 	startPeriodStr := c.Query("start_period")

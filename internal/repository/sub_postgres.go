@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -63,19 +64,6 @@ func (r *SubPostgres) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r *SubPostgres) ListByUser(ctx context.Context, userID uuid.UUID) ([]*model.Subscription, error) {
-	var subscriptions []*model.Subscription
-	result := r.db.WithContext(ctx).
-		Where("user_id = ?", userID).
-		Order("start_date DESC").
-		Find(&subscriptions)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return subscriptions, nil
-}
-
 func (r *SubPostgres) ListAll(ctx context.Context) ([]*model.Subscription, error) {
 	var subscriptions []*model.Subscription
 	result := r.db.WithContext(ctx).
@@ -88,7 +76,7 @@ func (r *SubPostgres) ListAll(ctx context.Context) ([]*model.Subscription, error
 	return subscriptions, nil
 }
 
-func (r *SubPostgres) ListWithFilters(ctx context.Context, userID *uuid.UUID, serviceName *string, startPeriod, endPeriod time.Time) ([]*model.Subscription, error) {
+func (r *SubPostgres) ListWithFilters(ctx context.Context, userID *uuid.UUID, serviceName *string, startPeriod, endPeriod *time.Time) ([]*model.Subscription, error) {
 	var subscriptions []*model.Subscription
 
 	query := r.db.WithContext(ctx)
@@ -101,13 +89,17 @@ func (r *SubPostgres) ListWithFilters(ctx context.Context, userID *uuid.UUID, se
 		query = query.Where("service_name = ?", *serviceName)
 	}
 
-	query = query.Where("start_date <= ?", endPeriod).
-		Where("(end_date IS NOT NULL AND end_date >= ?) OR (end_date IS NULL)", startPeriod)
+	log.Println(startPeriod, "||||", endPeriod)
+	if startPeriod != nil && endPeriod != nil {
+		query = query.Where("start_date <= ?", endPeriod).
+			Where("(end_date IS NOT NULL AND end_date >= ?) OR (end_date IS NULL)", startPeriod)
+	}
 
 	result := query.Order("start_date DESC").Find(&subscriptions)
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	log.Println(*subscriptions[0])
 
 	return subscriptions, nil
 }

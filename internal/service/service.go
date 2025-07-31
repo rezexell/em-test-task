@@ -13,8 +13,8 @@ type Subscription interface {
 	GetSubscription(ctx context.Context, id uuid.UUID) (*model.Subscription, error)
 	UpdateSubscription(ctx context.Context, sub *model.SubReq) error
 	DeleteSubscription(ctx context.Context, id uuid.UUID) error
-	ListUserSubscriptions(ctx context.Context, userID uuid.UUID) ([]*model.Subscription, error)
 	ListAllSubscriptions(ctx context.Context) ([]*model.Subscription, error)
+	ListSubscriptionsWithFilters(ctx context.Context, userID *uuid.UUID, serviceName *string) ([]*model.Subscription, error)
 	TotalSubscriptionCost(ctx context.Context, userID *uuid.UUID, serviceName *string, periodStart, periodEnd time.Time) (int, error)
 }
 type Service struct {
