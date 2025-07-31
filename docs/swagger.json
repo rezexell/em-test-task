@@ -10,8 +10,38 @@
     "basePath": "/",
     "paths": {
         "/sub": {
-            "post": {
-                "description": "Create a new subscription",
+            "get": {
+                "description": "Возвращает список всех подписок",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Получить все подписки",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Subscription"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Пример: {\\\"error\\\": \\\"failed to fetch subscriptions\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Обновляет данные подписки по ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -21,15 +51,68 @@
                 "tags": [
                     "subscriptions"
                 ],
-                "summary": "Create subscription",
+                "summary": "Обновить существующую подписку",
                 "parameters": [
                     {
-                        "description": "Subscription data",
+                        "description": "Обновленные данные подписки",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SubReq"
+                            "$ref": "#/definitions/model.Subscription"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Пример: {\\\"error\\\": \\\"start_date: required field\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Пример: {\\\"error\\\": \\\"subscription not found\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает новую подписочную запись",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Создать новую подписку",
+                "parameters": [
+                    {
+                        "description": "Данные подписки",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Subscription"
                         }
                     }
                 ],
@@ -44,7 +127,7 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Пример: {\\\"error\\\": \\\"invalid UUID format\\\"}",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -53,7 +136,231 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Пример: {\\\"error\\\": \\\"database connection failed\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sub/filter": {
+            "get": {
+                "description": "Возвращает подписки по фильтрам",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Фильтрация подписок",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пользователя (UUID)",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Название сервиса",
+                        "name": "service_name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Subscription"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Пример: {\\\"error\\\": \\\"invalid user_id format\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Пример: {\\\"error\\\": \\\"filtering failed\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sub/total-cost": {
+            "get": {
+                "description": "Рассчитывает общую стоимость подписок за период",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Расчет общей стоимости",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пользователя (UUID)",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Название сервиса",
+                        "name": "service_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "01/2023",
+                        "description": "Начало периода (MM/YYYY)",
+                        "name": "start_period",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "12/2023",
+                        "description": "Конец периода (MM/YYYY)",
+                        "name": "end_period",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Пример: {\\\"total_cost\\\": 150}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Пример: {\\\"error\\\": \\\"invalid end_period format, use MM/YYYY\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Пример: {\\\"error\\\": \\\"cost calculation failed\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sub/{id}": {
+            "get": {
+                "description": "Возвращает подписку по её идентификатору",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Получить подписку по ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID подписки (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Subscription"
+                        }
+                    },
+                    "400": {
+                        "description": "Пример: {\\\"error\\\": \\\"invalid UUID format\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Пример: {\\\"error\\\": \\\"subscription not found\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Пример: {\\\"error\\\": \\\"database query failed\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет подписку по ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Удалить подписку",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID подписки (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Пример: {\\\"error\\\": \\\"invalid id format\\\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Пример: {\\\"error\\\": \\\"delete operation failed\\\"}",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -66,8 +373,8 @@
         }
     },
     "definitions": {
-        "model.SubReq": {
-            "description": "Subscription request payload",
+        "model.Subscription": {
+            "description": "Subscription information",
             "type": "object",
             "required": [
                 "monthly_cost",
@@ -77,6 +384,9 @@
             ],
             "properties": {
                 "end_date": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "monthly_cost": {

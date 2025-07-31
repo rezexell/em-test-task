@@ -10,15 +10,15 @@ import (
 )
 
 // CreateSub
-// @Summary Create subscription
-// @Description Create a new subscription
+// @Summary Создать новую подписку
+// @Description Создает новую подписочную запись
 // @Tags subscriptions
 // @Accept json
 // @Produce json
-// @Param input body model.SubReq true "Subscription data"
+// @Param input body model.Subscription true "Данные подписки"
 // @Success 201 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} map[string]string "Пример: {\"error\": \"invalid UUID format\"}"
+// @Failure 500 {object} map[string]string "Пример: {\"error\": \"database connection failed\"}"
 // @Router /sub [post]
 func (h *Handler) CreateSub(c *gin.Context) {
 	const fn = "handler.CreateSub"
@@ -47,6 +47,17 @@ func (h *Handler) CreateSub(c *gin.Context) {
 	return
 }
 
+// UpdateSub
+// @Summary Обновить существующую подписку
+// @Description Обновляет данные подписки по ID
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param input body model.Subscription true "Обновленные данные подписки"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string "Пример: {\"error\": \"start_date: required field\"}"
+// @Failure 500 {object} map[string]string "Пример: {\"error\": \"subscription not found\"}"
+// @Router /sub [put]
 func (h *Handler) UpdateSub(c *gin.Context) {
 	const fn = "handler.UpdateSub"
 	h.logger.Info("context", slog.String("fn", fn))
@@ -76,6 +87,16 @@ func (h *Handler) UpdateSub(c *gin.Context) {
 	return
 }
 
+// DeleteSub
+// @Summary Удалить подписку
+// @Description Удаляет подписку по ID
+// @Tags subscriptions
+// @Produce json
+// @Param id path string true "ID подписки (UUID)"
+// @Success 204
+// @Failure 400 {object} map[string]string "Пример: {\"error\": \"invalid id format\"}"
+// @Failure 500 {object} map[string]string "Пример: {\"error\": \"delete operation failed\"}"
+// @Router /sub/{id} [delete]
 func (h *Handler) DeleteSub(c *gin.Context) {
 	const fn = "handler.DeleteSub"
 	h.logger.Info("context", slog.String("fn", fn))
@@ -93,6 +114,14 @@ func (h *Handler) DeleteSub(c *gin.Context) {
 	return
 }
 
+// GetAllSubs
+// @Summary Получить все подписки
+// @Description Возвращает список всех подписок
+// @Tags subscriptions
+// @Produce json
+// @Success 200 {array} model.Subscription
+// @Failure 500 {object} map[string]string "Пример: {\"error\": \"failed to fetch subscriptions\"}"
+// @Router /sub [get]
 func (h *Handler) GetAllSubs(c *gin.Context) {
 	const fn = "handler.GetAllSubs"
 	h.logger.Info("context", slog.String("fn", fn))
@@ -114,6 +143,17 @@ func (h *Handler) GetAllSubs(c *gin.Context) {
 	return
 }
 
+// GetSubByID
+// @Summary Получить подписку по ID
+// @Description Возвращает подписку по её идентификатору
+// @Tags subscriptions
+// @Produce json
+// @Param id path string true "ID подписки (UUID)"
+// @Success 200 {object} model.Subscription
+// @Failure 400 {object} map[string]string "Пример: {\"error\": \"invalid UUID format\"}"
+// @Failure 404 {object} map[string]string "Пример: {\"error\": \"subscription not found\"}"
+// @Failure 500 {object} map[string]string "Пример: {\"error\": \"database query failed\"}"
+// @Router /sub/{id} [get]
 func (h *Handler) GetSubByID(c *gin.Context) {
 	const fn = "handler.GetSubByID"
 	h.logger.Info("context", slog.String("fn", fn))
@@ -138,6 +178,17 @@ func (h *Handler) GetSubByID(c *gin.Context) {
 	return
 }
 
+// GetFilteredSubs
+// @Summary Фильтрация подписок
+// @Description Возвращает подписки по фильтрам
+// @Tags subscriptions
+// @Produce json
+// @Param user_id query string false "ID пользователя (UUID)"
+// @Param service_name query string false "Название сервиса"
+// @Success 200 {array} model.Subscription
+// @Failure 400 {object} map[string]string "Пример: {\"error\": \"invalid user_id format\"}"
+// @Failure 500 {object} map[string]string "Пример: {\"error\": \"filtering failed\"}"
+// @Router /sub/filter [get]
 func (h *Handler) GetFilteredSubs(c *gin.Context) {
 	const fn = "handler.GetFilteredSubs"
 	h.logger.Info("context", slog.String("fn", fn))
@@ -179,6 +230,19 @@ func (h *Handler) GetFilteredSubs(c *gin.Context) {
 	return
 }
 
+// GetTotalCost
+// @Summary Расчет общей стоимости
+// @Description Рассчитывает общую стоимость подписок за период
+// @Tags subscriptions
+// @Produce json
+// @Param user_id query string false "ID пользователя (UUID)"
+// @Param service_name query string false "Название сервиса"
+// @Param start_period query string true "Начало периода (MM/YYYY)" Example(01/2023)
+// @Param end_period query string true "Конец периода (MM/YYYY)" Example(12/2023)
+// @Success 200 {object} map[string]int "Пример: {\"total_cost\": 150}"
+// @Failure 400 {object} map[string]string "Пример: {\"error\": \"invalid end_period format, use MM/YYYY\"}"
+// @Failure 500 {object} map[string]string "Пример: {\"error\": \"cost calculation failed\"}"
+// @Router /sub/total-cost [get]
 func (h *Handler) GetTotalCost(c *gin.Context) {
 	const fn = "handler.GetTotalCost"
 	h.logger.Info("context", slog.String("fn", fn))
