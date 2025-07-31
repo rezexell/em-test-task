@@ -1,0 +1,67 @@
+basePath: /
+definitions:
+  model.SubReq:
+    description: Subscription request payload
+    properties:
+      end_date:
+        type: string
+      monthly_cost:
+        type: integer
+      service_name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      start_date:
+        type: string
+      user_id:
+        type: string
+    required:
+    - monthly_cost
+    - service_name
+    - start_date
+    - user_id
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: This is a sample API for managing subscriptions
+  title: Subscriptions API
+  version: "1.0"
+paths:
+  /sub:
+    post:
+      consumes:
+      - application/json
+      description: Create a new subscription
+      parameters:
+      - description: Subscription data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.SubReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create subscription
+      tags:
+      - subscriptions
+swagger: "2.0"

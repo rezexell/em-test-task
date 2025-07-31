@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/rezexell/em-test-task/docs"
 	"github.com/rezexell/em-test-task/internal/config"
 	"github.com/rezexell/em-test-task/internal/handler"
 	"github.com/rezexell/em-test-task/internal/repository"
@@ -10,6 +11,11 @@ import (
 	"os"
 )
 
+// @title Subscriptions API
+// @version 1.0
+// @description This is a sample API for managing subscriptions
+// @host localhost:3000
+// @BasePath /
 func main() {
 	cfg := config.InitConfig()
 	logger := slogger.InitLogger(cfg)

@@ -9,6 +9,17 @@ import (
 	"time"
 )
 
+// CreateSub
+// @Summary Create subscription
+// @Description Create a new subscription
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param input body model.SubReq true "Subscription data"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /sub [post]
 func (h *Handler) CreateSub(c *gin.Context) {
 	const fn = "handler.CreateSub"
 	h.logger.Info("context", slog.String("fn", fn))

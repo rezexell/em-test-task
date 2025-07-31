@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rezexell/em-test-task/internal/service"
 	sloggin "github.com/samber/slog-gin"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 	"log/slog"
 )
 
@@ -32,5 +34,7 @@ func (h *Handler) InitRouter() *gin.Engine {
 		sub.GET("/filter/", h.GetFilteredSubs)
 		sub.GET("/total-cost/", h.GetTotalCost)
 	}
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }
