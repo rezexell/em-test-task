@@ -24,36 +24,56 @@ func (h *Handler) CreateSub(c *gin.Context) {
 	const fn = "handler.CreateSub"
 	h.logger.Info("context", slog.String("fn", fn))
 
-	var req model.SubReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var sub model.Subscription
+	if err := c.ShouldBindJSON(&sub); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := sub.AfterBind(); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.service.CreateSubscription(c.Request.Context(), &req); err != nil {
+	if sub.ID == uuid.Nil {
+		sub.ID = uuid.New()
+	}
+
+	if err := h.service.CreateSubscription(c.Request.Context(), &sub); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "subscription created"})
+	c.JSON(http.StatusCreated, gin.H{"message": "subscription created", "id": sub.ID})
+	return
 }
 
 func (h *Handler) UpdateSub(c *gin.Context) {
 	const fn = "handler.UpdateSub"
 	h.logger.Info("context", slog.String("fn", fn))
 
-	var req model.SubReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var sub model.Subscription
+	if err := c.ShouldBindJSON(&sub); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	if err := h.service.UpdateSubscription(c.Request.Context(), &req); err != nil {
+	if err := sub.AfterBind(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if sub.ID == uuid.Nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "id is required"})
+		return
+	}
+
+	if err := h.service.UpdateSubscription(c.Request.Context(), &sub); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "subscription updated"})
+	return
 }
 
 func (h *Handler) DeleteSub(c *gin.Context) {
@@ -85,7 +105,12 @@ func (h *Handler) GetAllSubs(c *gin.Context) {
 	if len(subs) == 0 || subs == nil {
 		subs = []*model.Subscription{}
 	}
-	c.JSON(http.StatusOK, subs)
+
+	response := make([]gin.H, 0, len(subs))
+	for _, sub := range subs {
+		response = append(response, sub.ToResponse())
+	}
+	c.JSON(http.StatusOK, response)
 	return
 }
 
@@ -109,7 +134,7 @@ func (h *Handler) GetSubByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, sub)
+	c.JSON(http.StatusOK, sub.ToResponse())
 	return
 }
 
@@ -151,6 +176,7 @@ func (h *Handler) GetFilteredSubs(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, subs)
+	return
 }
 
 func (h *Handler) GetTotalCost(c *gin.Context) {
@@ -211,4 +237,5 @@ func (h *Handler) GetTotalCost(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"total_cost": total})
+	return
 }

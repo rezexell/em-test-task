@@ -4,6 +4,7 @@ import (
 	_ "github.com/rezexell/em-test-task/docs"
 	"github.com/rezexell/em-test-task/internal/config"
 	"github.com/rezexell/em-test-task/internal/handler"
+	"github.com/rezexell/em-test-task/internal/model"
 	"github.com/rezexell/em-test-task/internal/repository"
 	"github.com/rezexell/em-test-task/internal/service"
 	"github.com/rezexell/em-test-task/pkg/postgres"
@@ -18,6 +19,7 @@ import (
 // @BasePath /
 func main() {
 	cfg := config.InitConfig()
+	model.RegisterCustomBindings()
 	logger := slogger.InitLogger(cfg)
 	logger.Info("Logger initialized")
 

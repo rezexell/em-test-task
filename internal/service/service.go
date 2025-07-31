@@ -9,9 +9,9 @@ import (
 )
 
 type Subscription interface {
-	CreateSubscription(ctx context.Context, sub *model.SubReq) error
+	CreateSubscription(ctx context.Context, sub *model.Subscription) error
 	GetSubscription(ctx context.Context, id uuid.UUID) (*model.Subscription, error)
-	UpdateSubscription(ctx context.Context, sub *model.SubReq) error
+	UpdateSubscription(ctx context.Context, sub *model.Subscription) error
 	DeleteSubscription(ctx context.Context, id uuid.UUID) error
 	ListAllSubscriptions(ctx context.Context) ([]*model.Subscription, error)
 	ListSubscriptionsWithFilters(ctx context.Context, userID *uuid.UUID, serviceName *string) ([]*model.Subscription, error)
